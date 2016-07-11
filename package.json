@@ -1,0 +1,30 @@
+{
+  "name": "ds2nx",
+  "version": "1.0.0",
+  "description": "Import a docushare export in nuxeo with metadata mapping",
+  "main": "main.js",
+  "dependencies": {
+    "big-xml-streamer": "^0.0.5",
+    "fs": "0.0.2",
+    "lodash": "^4.13.1",
+    "xml2js": "^0.4.17"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/a-cordier/ds2nx.git"
+  },
+  "keywords": [
+    "Docushare",
+    "Nuxeo"
+  ],
+  "author": "acordier",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/a-cordier/ds2nx/issues"
+  },
+  "homepage": "https://github.com/a-cordier/ds2nx#readme"
+}
