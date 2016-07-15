@@ -3,7 +3,6 @@ var fs = require("fs"),
 var parser = new xml2js.Parser();
 var _ = require("lodash");
 
-
 /* Public */
 
 module.exports = DsObject;
@@ -18,7 +17,26 @@ DsObject.prototype.getCollections = function() {
 	});
 };
 
-/* returns the handle id of a dsobject */
+DsObject.prototype.getDocuments = function() {
+	return this.documents || _.filter(this.data.dsobjects.dsobject, function(object) {
+		return object.$.classname === "Document";
+	});
+};
+
+
+DsObject.prototype.getVersions = function(document) {
+	return  document.versions;
+};
+
+
+DsObject.prototype.getRenditions = function(document) {
+	return this.versions || _.map(this.getVersions(document), function(object){
+		return object.dsobject[0].renditions;
+	});
+};
+
+
+/* returns the handle dsid of a dsobject */
 DsObject.prototype.getObjectId = function(dsobject) {
 	return dsobject.$.handle;
 };
@@ -32,6 +50,10 @@ DsObject.prototype.getProp = function(dsobject, propName) {
 
 DsObject.prototype.getTitle = function(dsobject) {
 	return this.getProp(dsobject, "title");
+};
+
+DsObject.prototype.getOriginalFilename = function(dsobject) {
+	return this.getProp(dsobject, "original_file_name");
 };
 
 DsObject.prototype.getModifiedDate = function(dsobject) {
@@ -66,10 +88,21 @@ DsObject.prototype.getParents = function(dsobject) {
 DsObject.prototype.collectionMapper = function(collection) {
 	return {
 		"title": this.getTitle(collection),
-		"id": this.getObjectId(collection),
+		"dsid": this.getObjectId(collection),
 		"createDate": this.getCreateDate(collection),
 		"modifiedDate": this.getModifiedDate(collection),
-		"parent": this.getParent(collection)
+		"dsparent": this.getParent(collection)
+	};
+};
+
+DsObject.prototype.documentMapper = function(document) {
+	return {
+		"originalFileName": this.getOriginalFilename(document),
+		"title": this.getTitle(document),
+		"dsid": this.getObjectId(document),
+		"createDate": this.getCreateDate(document),
+		"modifiedDate": this.getModifiedDate(document),
+		"dsparent": this.getParent(document)
 	};
 };
 
@@ -77,47 +110,19 @@ DsObject.prototype.getMappedCollections = function() {
 	return this.mappCollections || _.map(this.getCollections(), this.collectionMapper.bind(this));
 };
 
-DsObject.prototype.getCollectionById = function(id) {
+DsObject.prototype.getMappedDocuments = function() {
+	return this.mappDocuments || _.map(this.getDocuments(), this.documentMapper.bind(this));
+};
+
+
+DsObject.prototype.getCollectionById = function(dsid) {
 	return _.find(this.getMappedCollections(), function(collection) {
-		return id === collection.id;
+		return dsid === collection.dsid;
 	});
 };
 
-DsObject.prototype.getChildren = function(collectionId) {
+DsObject.prototype.getChildren = function(collection) {
 	return _.filter(this.getMappedCollections(), function(_collection) {
-		return _collection.parent == collectionId;
+		return _collection.dsparent == collection.dsid;
 	});
 };
-
-DsObject.prototype.walk = function(root, preprocessor, processor, postprocessor) {
-	var self = this;
-	if (!root)
-		return false;
-	var children = this.getChildren(root.id);
-	if (children && children.length) {
-		_.each(children, function(child) {
-			preprocessor(child);
-			processor(child);
-			self.walk.call(self, child, preprocessor, processor, postprocessor);
-			postprocessor(child);
-		});
-	}
-};
-
-DsObject.prototype.printHierarchy = function(rootId){
-	var position = 1;
-	var print = function(collection){
-		console.log(Array(position).join('--|'), collection.title);
-	};
-	print(this.getCollectionById(rootId));
-	this.walk.call(this, this.getCollectionById(rootId), 
-		function(){
-			position++;
-		}, 
-		print,
-		function(){
-			position--;
-		});
-};
-
-

@@ -6,7 +6,6 @@ var _data = false;
 
 module.exports = {
 	parse: function(path) {
-		console.log(path);
 		var buf = fs.readFileSync(path);
 		parser.parseString(buf, function(err, data) {
 				_data = data;
