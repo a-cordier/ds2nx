@@ -15,25 +15,21 @@ var buildUrl = function(host) {
 	return host + "/api/v1/";
 };
 
-
-/* public */
-
-module.exports = Nuxeo;
-
-function Nuxeo(host) {
-	api = buildUrl(host);
-};
+var nuxeoPrototype = {
+	parseError: function parseError(response) {
+		if (response)
+			return response.statusCode + " - " + response.statusMessage;
+	},
 
 
-Nuxeo.prototype.buildEndpoint = function(endpoint) {
-	return api + endpoint;
-};
-
-// options := {user:<USERNAME>,password:<PASSWORD>}
-Nuxeo.prototype.connect = function(credentials) {
-	var deferred = Q.defer();
-	_client = new Client(credentials);
-	_client.get(this.buildEndpoint("path/"), {
+	buildEndpoint: function buildEndpoint(endpoint) {
+		return api + endpoint;
+	},
+	/* options := {user:<USERNAME>,password:<PASSWORD>} */
+	connect: function connect(credentials) {
+		var deferred = Q.defer();
+		_client = new Client(credentials);
+		_client.get(this.buildEndpoint("path/"), {
 			headers: {
 				"accept": "application/json"
 			}
@@ -46,32 +42,42 @@ Nuxeo.prototype.connect = function(credentials) {
 			}
 
 		});
-	return deferred.promise;
-};
-
-Nuxeo.prototype.getPostRequestBody = function(options) {
-	return {
-		headers: {
-			"Content-Type": "application/json",
-			"accept": "application/json"
-		},
-		data: {
-			"entity-type": "document",
-			"type": options.type || "File",
-			"name": options.name,
-			"properties": {
-				"dc:title": options.title || options.name
+		return deferred.promise;
+	},
+	getPostRequestBody: function getPostRequestBody(options) {
+		return {
+			headers: {
+				"Content-Type": "application/json",
+				"accept": "application/json"
+			},
+			data: {
+				"entity-type": "document",
+				"type": options.type || "File",
+				"name": options.name,
+				"properties": {
+					"dc:title": options.title || options.name
+				}
 			}
 		}
 	}
+
+};
+/* public */
+
+module.exports = {create: factory};
+
+function factory(host) {
+	api = buildUrl(host);
+	var instance = Object.create(nuxeoPrototype);
+	Object.defineProperty(instance, 'client', {
+		get: function() { 
+			if(!_client){
+				throw new Error('You must issue a connection. Use connect({user: "username", "password": "s3cr3t"})');
+			} else {
+				return _client;
+			}
+		}
+	});
+	return instance;
 };
 
-Object.defineProperty(Nuxeo.prototype, 'client', {
-    get: function() { 
-    	if(!_client){
-    		throw new Error('You must issue a connection. Use connect({user: "username", "password": "s3cr3t"})');
-    	} else {
-    		return _client;
-    	}
-    }
-});

@@ -1,8 +1,7 @@
-var fs = require("fs");
-var	xml2js = require("xml2js");
-var parser = new xml2js.Parser();
-
-var _data = false;
+var fs = require("fs"),
+	xml2js = require("xml2js"),
+	parser = new xml2js.Parser(),
+	_data = false;
 
 module.exports = {
 	parse: function(path) {
